@@ -18,10 +18,12 @@ const App = () => (
 
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/donate" element={<NotFound />} />
-          <Route path="/monitoring" element={<NotFound />} />
-          <Route path="/about" element={<NotFound />} />
+          <Route path="/donate" element={<Donate />} />
+          <Route path="/monitoring" element={<Monitoring />} />
+          <Route path="/about" element={<About />} />
           <Route path="*" element={<NotFound />} />
+        </Routes>
+
         </Routes>
 
       </BrowserRouter>
