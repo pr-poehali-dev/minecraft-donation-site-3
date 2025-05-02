@@ -1,9 +1,22 @@
 
-export interface DonationItem {
+export interface DonateItem {
   id: number;
-  title: string;
+  name: string;
   price: number;
   description: string;
   imageUrl: string;
-  gradientColors: string;
+  popular?: boolean;
+  discount?: number;
+  category: string;
+}
+
+export interface DonationCategory {
+  id: string;
+  label: string;
+  icon: string;
+}
+
+export interface FaqItem {
+  question: string;
+  answer: string;
 }
