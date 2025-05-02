@@ -15,11 +15,15 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+
         <Routes>
           <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/donate" element={<NotFound />} />
+          <Route path="/monitoring" element={<NotFound />} />
+          <Route path="/about" element={<NotFound />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
