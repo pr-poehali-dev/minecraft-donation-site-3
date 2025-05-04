@@ -18,6 +18,18 @@ export interface Server {
   tps?: number;
   uptime?: number;
   history?: ServerHistoryPoint[];
+  // Добавляем поля для RCON
+  rconEnabled?: boolean;
+  rconPort?: number;
+  rconPassword?: string;
+}
+
+// Настройки RCON-соединения
+export interface RconSettings {
+  enabled: boolean;
+  host: string;
+  port: number;
+  password: string;
 }
 
 export type TimeRange = 'day' | 'week' | 'month';

@@ -1,165 +1,254 @@
 
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Form, 
-  FormControl, 
-  FormDescription, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from "@/components/ui/form";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { ServerMonitoring } from "@/types/admin";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Server } from "@/types/server";
+import Icon from "@/components/ui/icon";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const serverSchema = z.object({
-  name: z.string().min(3, "Название должно содержать минимум 3 символа"),
-  address: z.string().min(3, "Адрес должен содержать минимум 3 символа"),
-  version: z.string().min(1, "Версия не может быть пустой"),
-  maxPlayers: z.coerce.number().int().min(1, "Количество должно быть больше 0"),
-  isActive: z.boolean().default(true),
-});
-
-type ServerFormValues = z.infer<typeof serverSchema>;
+const SERVERS_STORAGE_KEY = "craft_world_servers";
 
 interface ServerFormProps {
-  initialData?: ServerMonitoring;
-  onSubmit: (values: ServerFormValues) => void;
+  server?: Server;
+  onSave: (server: Server) => void;
   onCancel: () => void;
 }
 
-const ServerForm = ({ 
-  initialData, 
-  onSubmit, 
-  onCancel 
-}: ServerFormProps) => {
-  const form = useForm<ServerFormValues>({
-    resolver: zodResolver(serverSchema),
-    defaultValues: initialData ? {
-      name: initialData.name,
-      address: initialData.address,
-      version: initialData.version,
-      maxPlayers: initialData.maxPlayers,
-      isActive: initialData.isActive,
-    } : {
-      name: "",
-      address: "",
-      version: "1.20.4",
-      maxPlayers: 100,
-      isActive: true,
-    },
+const ServerForm = ({ server, onSave, onCancel }: ServerFormProps) => {
+  const { toast } = useToast();
+  const isEditing = !!server;
+  
+  const [formData, setFormData] = useState<Server>({
+    id: server?.id || Date.now(),
+    name: server?.name || "",
+    address: server?.address || "",
+    version: server?.version || "1.19.2",
+    status: server?.status || "offline",
+    players: server?.players || { online: 0, max: 100 },
+    // RCON настройки
+    rconEnabled: server?.rconEnabled || false,
+    rconPort: server?.rconPort || 25575,
+    rconPassword: server?.rconPassword || "",
   });
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-  const handleSubmit = (values: ServerFormValues) => {
-    onSubmit(values);
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: parseInt(value) || 0 }));
+  };
+
+  const handleCheckboxChange = (name: string, checked: boolean) => {
+    setFormData(prev => ({ ...prev, [name]: checked }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      onSave(formData);
+      toast({
+        title: isEditing ? "Сервер обновлен" : "Сервер добавлен",
+        description: `${formData.name} был успешно ${isEditing ? "обновлен" : "добавлен"}.`,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Ошибка сохранения",
+        description: "Не удалось сохранить сервер. Попробуйте еще раз.",
+      });
+    }
+  };
+
+  // Функция для тестирования RCON-соединения
+  const testRconConnection = () => {
+    // В реальном приложении здесь был бы запрос к API
+    toast({
+      title: "Тестирование RCON",
+      description: "Эта функция доступна только на рабочем сервере.",
+    });
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>{initialData ? "Редактирование сервера" : "Новый сервер"}</CardTitle>
-      </CardHeader>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)}>
-          <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Название сервера</FormLabel>
-                  <FormControl>
-                    <Input placeholder="CraftWorld Выживание" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Адрес сервера</FormLabel>
-                  <FormControl>
-                    <Input placeholder="survival.craftworld.ru" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    IP-адрес или домен сервера
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="version"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Версия Minecraft</FormLabel>
-                    <FormControl>
-                      <Input placeholder="1.20.4" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+    <form onSubmit={handleSubmit}>
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>{isEditing ? `Редактирование: ${server.name}` : "Добавить новый сервер"}</CardTitle>
+        </CardHeader>
+        <Tabs defaultValue="general">
+          <TabsList className="mx-6 mb-4">
+            <TabsTrigger value="general">Основные настройки</TabsTrigger>
+            <TabsTrigger value="rcon">RCON настройки</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="general">
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Название сервера</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="Выживание"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="address">IP-адрес сервера</Label>
+                  <Input
+                    id="address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    placeholder="mc.example.com"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="version">Версия</Label>
+                  <Input
+                    id="version"
+                    name="version"
+                    value={formData.version}
+                    onChange={handleChange}
+                    placeholder="1.19.2"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="maxPlayers">Максимальное количество игроков</Label>
+                  <Input
+                    id="maxPlayers"
+                    name="maxPlayers"
+                    type="number"
+                    min="1"
+                    value={formData.players.max}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      players: {
+                        ...prev.players,
+                        max: parseInt(e.target.value) || 100
+                      }
+                    }))}
+                    required
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </TabsContent>
+          
+          <TabsContent value="rcon">
+            <CardContent className="space-y-6">
+              <div className="flex items-center space-x-2 mb-6">
+                <Checkbox
+                  id="rconEnabled"
+                  checked={formData.rconEnabled}
+                  onCheckedChange={(checked) => handleCheckboxChange("rconEnabled", !!checked)}
+                />
+                <label
+                  htmlFor="rconEnabled"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Включить RCON для автоматической выдачи товаров
+                </label>
+              </div>
               
-              <FormField
-                control={form.control}
-                name="maxPlayers"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Максимум игроков</FormLabel>
-                    <FormControl>
-                      <Input type="number" min={1} step={1} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <FormField
-              control={form.control}
-              name="isActive"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                  <div className="space-y-0.5">
-                    <FormLabel>Активность</FormLabel>
-                    <FormDescription>
-                      Отображать сервер в мониторинге
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
+              {formData.rconEnabled && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="rconPort">RCON порт</Label>
+                    <Input
+                      id="rconPort"
+                      name="rconPort"
+                      type="number"
+                      value={formData.rconPort}
+                      onChange={handleNumberChange}
+                      placeholder="25575"
                     />
-                  </FormControl>
-                </FormItem>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      По умолчанию: 25575
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="rconPassword">Пароль RCON</Label>
+                    <Input
+                      id="rconPassword"
+                      name="rconPassword"
+                      type="password"
+                      value={formData.rconPassword}
+                      onChange={handleChange}
+                      placeholder="Защищенный пароль"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Храните этот пароль в безопасности!
+                    </p>
+                  </div>
+                  
+                  <div className="md:col-span-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={testRconConnection}
+                      disabled={!formData.rconEnabled || !formData.rconPassword}
+                    >
+                      <Icon name="Zap" className="w-4 h-4 mr-2" />
+                      Проверить подключение
+                    </Button>
+                  </div>
+                  
+                  <div className="md:col-span-2 p-4 border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 rounded-md">
+                    <div className="flex items-start">
+                      <Icon name="AlertTriangle" className="w-5 h-5 text-amber-600 mr-2 mt-0.5" />
+                      <div>
+                        <h4 className="text-sm font-medium text-amber-800 dark:text-amber-400">Важная информация</h4>
+                        <p className="text-xs text-amber-700 dark:text-amber-500 mt-1">
+                          Для работы RCON необходимо:
+                        </p>
+                        <ul className="text-xs text-amber-700 dark:text-amber-500 list-disc list-inside ml-2 mt-1">
+                          <li>Включить RCON в server.properties (enable-rcon=true)</li>
+                          <li>Указать тот же пароль в server.properties (rcon.password)</li>
+                          <li>Указать тот же порт в server.properties (rcon.port)</li>
+                          <li>Перезапустить сервер после изменений</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
-            />
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="outline" type="button" onClick={onCancel}>
-              Отмена
-            </Button>
-            <Button type="submit">
-              {initialData ? "Сохранить" : "Создать"}
-            </Button>
-          </CardFooter>
-        </form>
-      </Form>
-    </Card>
+            </CardContent>
+          </TabsContent>
+        </Tabs>
+        <CardFooter className="flex justify-between">
+          <Button variant="outline" type="button" onClick={onCancel}>
+            Отмена
+          </Button>
+          <Button type="submit">
+            <Icon name="Save" className="w-4 h-4 mr-2" />
+            {isEditing ? "Сохранить изменения" : "Добавить сервер"}
+          </Button>
+        </CardFooter>
+      </Card>
+    </form>
   );
 };
 
