@@ -13,6 +13,7 @@ import AdminIndex from "./pages/admin/Index";
 import AdminLogin from "./pages/admin/Login";
 import AdminDonations from "./pages/admin/Donations";
 import AdminServers from "./pages/admin/Servers";
+import AuthGuard from "./components/admin/AuthGuard";
 
 const queryClient = new QueryClient();
 
@@ -27,10 +28,10 @@ const App = () => (
           <Route path="/donate" element={<Donate />} />
           <Route path="/monitoring" element={<Monitoring />} />
           <Route path="/about" element={<About />} />
-          <Route path="/admin" element={<AdminIndex />} />
           <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/donations" element={<AdminDonations />} />
-          <Route path="/admin/servers" element={<AdminServers />} />
+          <Route path="/admin" element={<AuthGuard><AdminIndex /></AuthGuard>} />
+          <Route path="/admin/donations" element={<AuthGuard><AdminDonations /></AuthGuard>} />
+          <Route path="/admin/servers" element={<AuthGuard><AdminServers /></AuthGuard>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

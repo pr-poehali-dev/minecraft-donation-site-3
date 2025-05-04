@@ -5,21 +5,28 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import Dashboard from "@/components/admin/Dashboard";
 import { AdminUser } from "@/types/admin";
 import { useNavigate } from "react-router-dom";
+import { getCurrentUser, logoutUser } from "@/utils/authUtils";
+import { useEffect } from "react";
 
 const AdminIndex = () => {
   const navigate = useNavigate();
-  const [user] = useState<AdminUser>({
-    id: "1",
-    username: "admin",
-    email: "admin@craftworld.ru",
-    role: "admin",
-    avatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=admin",
-  });
+  const [user, setUser] = useState<AdminUser | null>(null);
+
+  useEffect(() => {
+    const userData = getCurrentUser();
+    if (userData) {
+      setUser(userData);
+    }
+  }, []);
 
   const handleLogout = () => {
-    // В будущем добавим логику выхода с сервера
+    logoutUser();
     navigate("/admin/login");
   };
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
