@@ -13,6 +13,7 @@ import AdminIndex from "./pages/admin/Index";
 import AdminLogin from "./pages/admin/Login";
 import AdminDonations from "./pages/admin/Donations";
 import AdminServers from "./pages/admin/Servers";
+import AdminProducts from "./pages/admin/Products";
 import AuthGuard from "./components/admin/AuthGuard";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/admin" element={<AuthGuard><AdminIndex /></AuthGuard>} />
           <Route path="/admin/donations" element={<AuthGuard><AdminDonations /></AuthGuard>} />
           <Route path="/admin/servers" element={<AuthGuard><AdminServers /></AuthGuard>} />
+          <Route path="/admin/products" element={<AuthGuard><AdminProducts /></AuthGuard>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
