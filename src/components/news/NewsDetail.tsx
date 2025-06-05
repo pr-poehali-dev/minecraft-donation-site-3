@@ -3,7 +3,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Icon from "@/components/ui/icon";
 import { Link } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
 
 interface NewsDetailProps {
   news: NewsItem;
@@ -50,16 +49,10 @@ const NewsDetail = ({ news, categories }: NewsDetailProps) => {
         </div>
       </div>
 
-      <div className="prose prose-lg max-w-none mb-8">
-        <ReactMarkdown>{news.content}</ReactMarkdown>
-      </div>
-
-      <div className="flex flex-wrap gap-2 pt-6 border-t">
-        {news.tags.map((tag) => (
-          <Badge key={tag} variant="secondary">
-            {tag}
-          </Badge>
-        ))}
+      <div className="prose prose-lg max-w-none">
+        <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
+          {news.content}
+        </div>
       </div>
     </article>
   );
