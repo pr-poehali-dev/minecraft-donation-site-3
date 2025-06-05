@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -29,7 +28,9 @@ const Navbar = () => {
     <nav
       className={cn(
         "sticky top-0 z-50 w-full transition-all duration-300",
-        scrolled ? "bg-background/80 backdrop-blur-md border-b" : "bg-transparent"
+        scrolled
+          ? "bg-background/80 backdrop-blur-md border-b"
+          : "bg-transparent",
       )}
     >
       <div className="container py-4 flex justify-between items-center">
@@ -44,25 +45,25 @@ const Navbar = () => {
             to="/"
             className={cn(
               "text-sm font-medium transition-colors hover:text-primary",
-              isActive("/") ? "text-foreground" : "text-muted-foreground"
+              isActive("/") ? "text-foreground" : "text-muted-foreground",
             )}
           >
             Главная
           </Link>
           <Link
-            to="/monitoring"
+            to="/news"
             className={cn(
               "text-sm font-medium transition-colors hover:text-primary",
-              isActive("/monitoring") ? "text-foreground" : "text-muted-foreground"
+              isActive("/news") ? "text-foreground" : "text-muted-foreground",
             )}
           >
-            Мониторинг
+            Новости
           </Link>
           <Link
             to="/donate"
             className={cn(
               "text-sm font-medium transition-colors hover:text-primary",
-              isActive("/donate") ? "text-foreground" : "text-muted-foreground"
+              isActive("/donate") ? "text-foreground" : "text-muted-foreground",
             )}
           >
             Донат
@@ -71,7 +72,7 @@ const Navbar = () => {
             to="/about"
             className={cn(
               "text-sm font-medium transition-colors hover:text-primary",
-              isActive("/about") ? "text-foreground" : "text-muted-foreground"
+              isActive("/about") ? "text-foreground" : "text-muted-foreground",
             )}
           >
             О нас
@@ -80,7 +81,9 @@ const Navbar = () => {
             to="/admin/login"
             className={cn(
               "text-sm font-medium transition-colors hover:text-primary",
-              isActive("/admin/login") ? "text-foreground" : "text-muted-foreground"
+              isActive("/admin/login")
+                ? "text-foreground"
+                : "text-muted-foreground",
             )}
           >
             Админ-панель
@@ -107,7 +110,9 @@ const Navbar = () => {
                     to="/"
                     className={cn(
                       "flex items-center gap-2 text-lg font-medium transition-colors hover:text-primary",
-                      isActive("/") ? "text-foreground" : "text-muted-foreground"
+                      isActive("/")
+                        ? "text-foreground"
+                        : "text-muted-foreground",
                     )}
                   >
                     <Icon name="Home" size={20} />
@@ -117,7 +122,9 @@ const Navbar = () => {
                     to="/monitoring"
                     className={cn(
                       "flex items-center gap-2 text-lg font-medium transition-colors hover:text-primary",
-                      isActive("/monitoring") ? "text-foreground" : "text-muted-foreground"
+                      isActive("/monitoring")
+                        ? "text-foreground"
+                        : "text-muted-foreground",
                     )}
                   >
                     <Icon name="Activity" size={20} />
@@ -127,7 +134,9 @@ const Navbar = () => {
                     to="/donate"
                     className={cn(
                       "flex items-center gap-2 text-lg font-medium transition-colors hover:text-primary",
-                      isActive("/donate") ? "text-foreground" : "text-muted-foreground"
+                      isActive("/donate")
+                        ? "text-foreground"
+                        : "text-muted-foreground",
                     )}
                   >
                     <Icon name="Gift" size={20} />
@@ -137,17 +146,20 @@ const Navbar = () => {
                     to="/about"
                     className={cn(
                       "flex items-center gap-2 text-lg font-medium transition-colors hover:text-primary",
-                      isActive("/about") ? "text-foreground" : "text-muted-foreground"
+                      isActive("/about")
+                        ? "text-foreground"
+                        : "text-muted-foreground",
                     )}
                   >
-                    <Icon name="Info" size={20} />
-                    О нас
+                    <Icon name="Info" size={20} />О нас
                   </Link>
                   <Link
                     to="/admin/login"
                     className={cn(
                       "flex items-center gap-2 text-lg font-medium transition-colors hover:text-primary",
-                      isActive("/admin/login") ? "text-foreground" : "text-muted-foreground"
+                      isActive("/admin/login")
+                        ? "text-foreground"
+                        : "text-muted-foreground",
                     )}
                   >
                     <Icon name="ShieldCheck" size={20} />

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -33,6 +32,11 @@ const navItems: NavItem[] = [
     href: "/admin/servers",
     icon: "Server",
   },
+  {
+    title: "Новости",
+    href: "/admin/news",
+    icon: "Newspaper",
+  },
 ];
 
 const AdminSidebar = () => {
@@ -58,7 +62,10 @@ const AdminSidebar = () => {
             onClick={() => setIsCollapsed(!isCollapsed)}
             className={isCollapsed ? "mx-auto" : ""}
           >
-            <Icon name={isCollapsed ? "PanelRightOpen" : "PanelLeftClose"} className="h-4 w-4" />
+            <Icon
+              name={isCollapsed ? "PanelRightOpen" : "PanelLeftClose"}
+              className="h-4 w-4"
+            />
           </Button>
         </div>
         <ScrollArea className="flex-1">
@@ -69,7 +76,10 @@ const AdminSidebar = () => {
                   variant={isActive(item.href) ? "secondary" : "ghost"}
                   className={`w-full justify-start ${isCollapsed ? "h-10 w-10 p-0 justify-center" : ""}`}
                 >
-                  <Icon name={item.icon} className={`h-4 w-4 ${!isCollapsed ? "mr-2" : ""}`} />
+                  <Icon
+                    name={item.icon}
+                    className={`h-4 w-4 ${!isCollapsed ? "mr-2" : ""}`}
+                  />
                   {!isCollapsed && <span>{item.title}</span>}
                 </Button>
               </Link>
@@ -82,7 +92,10 @@ const AdminSidebar = () => {
                 variant="ghost"
                 className={`w-full justify-start ${isCollapsed ? "h-10 w-10 p-0 justify-center" : ""}`}
               >
-                <Icon name="ExternalLink" className={`h-4 w-4 ${!isCollapsed ? "mr-2" : ""}`} />
+                <Icon
+                  name="ExternalLink"
+                  className={`h-4 w-4 ${!isCollapsed ? "mr-2" : ""}`}
+                />
                 {!isCollapsed && <span>Вернуться на сайт</span>}
               </Button>
             </Link>
