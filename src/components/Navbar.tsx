@@ -51,6 +51,15 @@ const Navbar = () => {
             Главная
           </Link>
           <Link
+            to="/monitoring"
+            className={cn(
+              "text-sm font-medium transition-colors hover:text-primary",
+              isActive("/monitoring") ? "text-foreground" : "text-muted-foreground",
+            )}
+          >
+            Серверы
+          </Link>
+          <Link
             to="/news"
             className={cn(
               "text-sm font-medium transition-colors hover:text-primary",
@@ -128,7 +137,19 @@ const Navbar = () => {
                     )}
                   >
                     <Icon name="Activity" size={20} />
-                    Мониторинг
+                    Серверы
+                  </Link>
+                  <Link
+                    to="/news"
+                    className={cn(
+                      "flex items-center gap-2 text-lg font-medium transition-colors hover:text-primary",
+                      isActive("/news")
+                        ? "text-foreground"
+                        : "text-muted-foreground",
+                    )}
+                  >
+                    <Icon name="Newspaper" size={20} />
+                    Новости
                   </Link>
                   <Link
                     to="/donate"
