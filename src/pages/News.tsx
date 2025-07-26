@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import NewsCard from "@/components/news/NewsCard";
 import NewsDetail from "@/components/news/NewsDetail";
+import NewsCardSkeleton from "@/components/ui/news-skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Icon from "@/components/ui/icon";
@@ -12,6 +13,16 @@ import { mockNews, newsCategories } from "@/data/newsData";
 const News = () => {
   const { id } = useParams();
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Симуляция загрузки новостей
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [selectedCategory]);
 
   // Если есть ID, показываем детальную страницу новости
   if (id) {
@@ -91,15 +102,27 @@ const News = () => {
 
         {/* News Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredNews.map((news, index) => (
-            <div
-              key={news.id}
-              className="animate-fade-in"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <NewsCard news={news} categories={newsCategories} />
-            </div>
-          ))}
+          {loading ? (
+            Array.from({ length: 6 }).map((_, index) => (
+              <div
+                key={index}
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <NewsCardSkeleton />
+              </div>
+            ))
+          ) : (
+            filteredNews.map((news, index) => (
+              <div
+                key={news.id}
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <NewsCard news={news} categories={newsCategories} />
+              </div>
+            ))
+          )}
         </div>
 
         {filteredNews.length === 0 && (

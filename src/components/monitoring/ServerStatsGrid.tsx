@@ -1,6 +1,7 @@
 
 import { Server } from "@/types/server";
 import ServerStatCard from "./ServerStatCard";
+import StatCardSkeleton from "@/components/ui/stat-card-skeleton";
 import { formatUptime } from "@/utils/serverUtils";
 
 interface ServerStatsGridProps {
@@ -17,6 +18,16 @@ const ServerStatsGrid = ({ server }: ServerStatsGridProps) => {
   };
   
   const tpsStatus = getTpsStatus(server.tps);
+  
+  if (server.status === 'loading') {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <StatCardSkeleton />
+        <StatCardSkeleton />
+        <StatCardSkeleton />
+      </div>
+    );
+  }
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

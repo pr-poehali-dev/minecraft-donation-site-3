@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import Icon from "@/components/ui/icon";
+import ServerSkeleton from "@/components/ui/server-skeleton";
 
 interface ServerStatusProps {
   serverName: string;
@@ -26,7 +27,7 @@ const ServerStatus = ({ serverName, serverAddress, compact = false }: ServerStat
           const randomPlayers = Math.floor(Math.random() * 50) + 10;
           setPlayers({ online: randomPlayers, max: 100 });
         }
-      }, 1000);
+      }, 2000 + Math.random() * 1000); // Случайная задержка 2-3 секунды
     };
     
     fetchStatus();
@@ -38,9 +39,9 @@ const ServerStatus = ({ serverName, serverAddress, compact = false }: ServerStat
   if (compact) {
     return (
       <div className="flex items-center gap-2">
-        <div className={`h-3 w-3 rounded-full ${status === 'online' ? 'bg-green-500' : status === 'offline' ? 'bg-red-500' : 'bg-yellow-500'}`}></div>
+        <div className={`h-3 w-3 rounded-full ${status === 'online' ? 'bg-green-500' : status === 'offline' ? 'bg-red-500' : 'bg-muted animate-pulse'}`}></div>
         <span className="text-sm">
-          {status === 'online' ? `${players.online}/${players.max}` : status === 'offline' ? 'Оффлайн' : 'Загрузка...'}
+          {status === 'online' ? `${players.online}/${players.max}` : status === 'offline' ? 'Оффлайн' : <div className="h-4 w-16 bg-muted animate-pulse rounded inline-block" />}
         </span>
       </div>
     );
@@ -79,9 +80,12 @@ const ServerStatus = ({ serverName, serverAddress, compact = false }: ServerStat
         )}
         
         {status === 'loading' && (
-          <div className="flex items-center justify-center py-2 text-sm text-muted-foreground">
-            <Icon name="Loader2" size={16} className="mr-2 animate-spin" />
-            Проверка статуса...
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <div className="h-4 w-16 bg-muted animate-pulse rounded" />
+              <div className="h-4 w-12 bg-muted animate-pulse rounded" />
+            </div>
+            <div className="h-2 w-full bg-muted animate-pulse rounded" />
           </div>
         )}
       </CardContent>
