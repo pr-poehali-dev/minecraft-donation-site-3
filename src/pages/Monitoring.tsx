@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ServerStatus from "@/components/ServerStatus";
@@ -9,7 +9,12 @@ import MonitoringHeroSection from "@/components/monitoring/MonitoringHeroSection
 import ServerSelector from "@/components/monitoring/ServerSelector";
 import ServerDetailCard from "@/components/monitoring/ServerDetailCard";
 import TopPlayersTable from "@/components/monitoring/TopPlayersTable";
-import AddServerSection from "@/components/monitoring/AddServerSection";
+import ServerManagement from "@/components/monitoring/ServerManagement";
+import { getCurrentUser } from "@/utils/authUtils";
+import { Button } from "@/components/ui/button";
+import Icon from "@/components/ui/icon";
+
+const MONITORING_SERVERS_KEY = "monitoring_servers";
 
 const Monitoring = () => {
   // Начальные данные серверов
@@ -42,9 +47,39 @@ const Monitoring = () => {
   
   const [selectedServer, setSelectedServer] = useState<number>(1);
   const [timeRange, setTimeRange] = useState<TimeRange>('day');
+  const [managedServers, setManagedServers] = useState<Server[]>(initialServers);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Проверяем права администратора
+  useEffect(() => {
+    const user = getCurrentUser();
+    setIsAdmin(!!user);
+    
+    // Загружаем серверы из localStorage если есть
+    const storedServers = localStorage.getItem(MONITORING_SERVERS_KEY);
+    if (storedServers) {
+      try {
+        const parsed = JSON.parse(storedServers);
+        setManagedServers(parsed);
+      } catch (error) {
+        console.error("Error parsing stored servers:", error);
+      }
+    }
+  }, []);
+  
+  // Функция для обновления списка серверов
+  const handleServersUpdate = (updatedServers: Server[]) => {
+    setManagedServers(updatedServers);
+    localStorage.setItem(MONITORING_SERVERS_KEY, JSON.stringify(updatedServers));
+    
+    // Если удаленный сервер был выбран, переключаемся на первый доступный
+    if (!updatedServers.find(s => s.id === selectedServer) && updatedServers.length > 0) {
+      setSelectedServer(updatedServers[0].id);
+    }
+  };
   
   // Использование хука для получения данных о серверах
-  const servers = useServerData(initialServers, timeRange);
+  const servers = useServerData(managedServers, timeRange);
   
   // Получение текущего выбранного сервера
   const currentServer = servers.find(server => server.id === selectedServer) || servers[0];
@@ -104,8 +139,34 @@ const Monitoring = () => {
         </div>
       </section>
       
-      {/* Add Server Section */}
-      <AddServerSection />
+      {/* Server Management - только для администраторов */}
+      {isAdmin ? (
+        <ServerManagement 
+          servers={managedServers}
+          onUpdate={handleServersUpdate}
+        />
+      ) : (
+        <section className="py-12 bg-gradient-to-r from-primary/20 to-accent/20">
+          <div className="container px-4 md:px-6 text-center">
+            <h2 className="text-2xl md:text-4xl font-semibold mb-4">Добавьте свой сервер</h2>
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Хотите добавить свой сервер в наш мониторинг? Свяжитесь с администрацией для получения доступа.
+            </p>
+            <div className="flex gap-4 justify-center">
+              <Button size="lg" asChild>
+                <a href="/admin/login">
+                  <Icon name="LogIn" size={18} className="mr-2" />
+                  Войти как админ
+                </a>
+              </Button>
+              <Button size="lg" variant="outline">
+                <Icon name="MessageCircle" size={18} className="mr-2" />
+                Связаться с нами
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
       
       <Footer />
     </div>

@@ -37,7 +37,7 @@ import { AdminUser } from "@/types/admin";
 import Icon from "@/components/ui/icon";
 import { Badge } from "@/components/ui/badge";
 
-const SERVERS_STORAGE_KEY = "craft_world_servers";
+const SERVERS_STORAGE_KEY = "monitoring_servers";
 
 const AdminServers = () => {
   const navigate = useNavigate();
@@ -162,6 +162,12 @@ const AdminServers = () => {
               </p>
             </div>
             <div className="flex gap-2">
+              <Button variant="outline" asChild>
+                <a href="/monitoring" target="_blank" rel="noopener noreferrer">
+                  <Icon name="Activity" className="w-4 h-4 mr-2" />
+                  Открыть мониторинг
+                </a>
+              </Button>
               <Button variant="outline" onClick={() => {
                 const dataStr = JSON.stringify(servers, null, 2);
                 const dataBlob = new Blob([dataStr], {type: 'application/json'});
