@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import AdminLayout from "@/components/admin/AdminLayout";
+import AdminHeader from "@/components/admin/AdminHeader";
+import AdminSidebar from "@/components/admin/AdminSidebar";
+import { getCurrentUser, logoutUser } from "@/utils/authUtils";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,11 +38,21 @@ const SERVERS_STORAGE_KEY = "monitoring_servers";
 
 const ServerMonitoring = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [servers, setServers] = useState<Server[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [currentServer, setCurrentServer] = useState<Server | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [serverToDelete, setServerToDelete] = useState<Server | null>(null);
+
+  // Проверяем аутентификацию
+  useEffect(() => {
+    const user = getCurrentUser();
+    if (!user) {
+      navigate("/admin/login");
+      return;
+    }
+  }, [navigate]);
 
   useEffect(() => {
     const savedServers = localStorage.getItem(SERVERS_STORAGE_KEY);
@@ -124,16 +137,24 @@ const ServerMonitoring = () => {
     }
   };
 
+  const handleLogout = () => {
+    logoutUser();
+    navigate("/admin/login");
+  };
+
   return (
-    <AdminLayout>
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">Мониторинг серверов</h1>
-            <p className="text-muted-foreground">
-              Управление серверами для мониторинга
-            </p>
-          </div>
+    <div className="flex h-screen bg-background">
+      <AdminSidebar />
+      <div className="flex-1 flex flex-col">
+        <AdminHeader onLogout={handleLogout} />
+        <div className="flex-1 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold">Мониторинг серверов</h1>
+              <p className="text-muted-foreground">
+                Управление серверами для мониторинга
+              </p>
+            </div>
         <Button 
           onClick={() => {
             setCurrentServer(null);
@@ -274,8 +295,9 @@ const ServerMonitoring = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+        </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 };
 
