@@ -33,8 +33,8 @@ const navItems: NavItem[] = [
     icon: "Server",
   },
   {
-    title: "Мониторинг",
-    href: "/monitoring",
+    title: "Мониторинг серверов",
+    href: "/admin/server-monitoring",
     icon: "Activity",
   },
   {
