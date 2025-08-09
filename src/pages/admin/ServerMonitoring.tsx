@@ -4,6 +4,7 @@ import AdminHeader from "@/components/admin/AdminHeader";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { getCurrentUser, logoutUser } from "@/utils/authUtils";
 import { useNavigate } from "react-router-dom";
+import { AdminUser } from "@/types/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +40,7 @@ const SERVERS_STORAGE_KEY = "monitoring_servers";
 const ServerMonitoring = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [user, setUser] = useState<AdminUser | null>(null);
   const [servers, setServers] = useState<Server[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [currentServer, setCurrentServer] = useState<Server | null>(null);
@@ -47,11 +49,12 @@ const ServerMonitoring = () => {
 
   // Проверяем аутентификацию
   useEffect(() => {
-    const user = getCurrentUser();
-    if (!user) {
+    const userData = getCurrentUser();
+    if (!userData) {
       navigate("/admin/login");
       return;
     }
+    setUser(userData);
   }, [navigate]);
 
   useEffect(() => {
@@ -142,11 +145,15 @@ const ServerMonitoring = () => {
     navigate("/admin/login");
   };
 
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="flex h-screen bg-background">
       <AdminSidebar />
       <div className="flex-1 flex flex-col">
-        <AdminHeader onLogout={handleLogout} />
+        <AdminHeader user={user} onLogout={handleLogout} />
         <div className="flex-1 p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
