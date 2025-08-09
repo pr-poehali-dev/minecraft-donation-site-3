@@ -33,11 +33,6 @@ const navItems: NavItem[] = [
     icon: "Server",
   },
   {
-    title: "Мониторинг серверов",
-    href: "/admin/server-monitoring",
-    icon: "Activity",
-  },
-  {
     title: "Новости",
     href: "/admin/news",
     icon: "Newspaper",

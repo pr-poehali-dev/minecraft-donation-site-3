@@ -36,8 +36,6 @@ const ServerForm = ({ server, onSave, onCancel }: ServerFormProps) => {
     version: server?.version || "1.19.2",
     status: server?.status || "offline",
     players: server?.players || { online: 0, max: 100 },
-    tps: server?.tps || 20.0,
-    uptime: server?.uptime || 0,
     // RCON настройки
     rconEnabled: server?.rconEnabled || false,
     rconPort: server?.rconPort || 25575,
@@ -61,26 +59,8 @@ const ServerForm = ({ server, onSave, onCancel }: ServerFormProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name.trim() || !formData.address.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Ошибка валидации",
-        description: "Заполните все обязательные поля.",
-      });
-      return;
-    }
-    
     try {
-      const serverToSave = {
-        ...formData,
-        status: "offline" as const,
-        players: {
-          online: 0,
-          max: formData.players.max
-        }
-      };
-      
-      onSave(serverToSave);
+      onSave(formData);
       toast({
         title: isEditing ? "Сервер обновлен" : "Сервер добавлен",
         description: `${formData.name} был успешно ${isEditing ? "обновлен" : "добавлен"}.`,
@@ -100,23 +80,6 @@ const ServerForm = ({ server, onSave, onCancel }: ServerFormProps) => {
     toast({
       title: "Тестирование RCON",
       description: "Эта функция доступна только на рабочем сервере.",
-    });
-  };
-
-  // Функция для тестирования подключения к серверу
-  const testServerConnection = () => {
-    if (!formData.address.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Ошибка",
-        description: "Введите адрес сервера для тестирования.",
-      });
-      return;
-    }
-
-    toast({
-      title: "Тестирование подключения",
-      description: "Пингуем сервер... (Эта функция доступна только на рабочем сервере)",
     });
   };
 
@@ -149,25 +112,14 @@ const ServerForm = ({ server, onSave, onCancel }: ServerFormProps) => {
                 
                 <div className="space-y-2">
                   <Label htmlFor="address">IP-адрес сервера</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="address"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleChange}
-                      placeholder="mc.example.com"
-                      className="flex-1"
-                      required
-                    />
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={testServerConnection}
-                      disabled={!formData.address.trim()}
-                    >
-                      <Icon name="Wifi" className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  <Input
+                    id="address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    placeholder="mc.example.com"
+                    required
+                  />
                 </div>
                 
                 <div className="space-y-2">
@@ -189,20 +141,16 @@ const ServerForm = ({ server, onSave, onCancel }: ServerFormProps) => {
                     name="maxPlayers"
                     type="number"
                     min="1"
-                    max="1000"
                     value={formData.players.max}
                     onChange={(e) => setFormData(prev => ({
                       ...prev,
                       players: {
                         ...prev.players,
-                        max: Math.max(1, parseInt(e.target.value) || 100)
+                        max: parseInt(e.target.value) || 100
                       }
                     }))}
                     required
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Максимальное количество одновременно подключенных игроков
-                  </p>
                 </div>
               </div>
             </CardContent>
