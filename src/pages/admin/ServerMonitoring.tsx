@@ -4,7 +4,7 @@ import AdminHeader from "@/components/admin/AdminHeader";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { getCurrentUser, logoutUser } from "@/utils/authUtils";
 import { useNavigate } from "react-router-dom";
-import { AdminUser } from "@/types/admin";
+import { AdminUser, ServerMonitoring, ServerStats, ServerHistoryStats } from "@/types/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,27 +25,26 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import Icon from "@/components/ui/icon";
-import { Server } from "@/types/server";
-import ServerForm from "@/components/admin/servers/ServerForm";
 
-const SERVERS_STORAGE_KEY = "monitoring_servers";
+const MONITORING_SERVERS_KEY = "monitoring_servers";
+const SERVER_STATS_KEY = "server_stats";
 
 const ServerMonitoring = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [user, setUser] = useState<AdminUser | null>(null);
-  const [servers, setServers] = useState<Server[]>([]);
+  const [servers, setServers] = useState<ServerMonitoring[]>([]);
+  const [serverStats, setServerStats] = useState<Record<string, ServerStats>>({});
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [currentServer, setCurrentServer] = useState<Server | null>(null);
+  const [currentServer, setCurrentServer] = useState<ServerMonitoring | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [serverToDelete, setServerToDelete] = useState<Server | null>(null);
+  const [serverToDelete, setServerToDelete] = useState<ServerMonitoring | null>(null);
+  const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
 
   // Проверяем аутентификацию
   useEffect(() => {
@@ -57,24 +56,128 @@ const ServerMonitoring = () => {
     setUser(userData);
   }, [navigate]);
 
+  // Загружаем данные
   useEffect(() => {
-    const savedServers = localStorage.getItem(SERVERS_STORAGE_KEY);
+    loadServers();
+    loadServerStats();
+  }, []);
+
+  // Имитация обновления статистики серверов каждые 30 секунд
+  useEffect(() => {
+    const interval = setInterval(() => {
+      updateServerStats();
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, [servers]);
+
+  const loadServers = () => {
+    const savedServers = localStorage.getItem(MONITORING_SERVERS_KEY);
     if (savedServers) {
       setServers(JSON.parse(savedServers));
     }
-  }, []);
-
-  const saveServersToStorage = (updatedServers: Server[]) => {
-    setServers(updatedServers);
-    localStorage.setItem(SERVERS_STORAGE_KEY, JSON.stringify(updatedServers));
   };
 
-  const handleEdit = (server: Server) => {
+  const loadServerStats = () => {
+    const savedStats = localStorage.getItem(SERVER_STATS_KEY);
+    if (savedStats) {
+      setServerStats(JSON.parse(savedStats));
+    }
+  };
+
+  const saveServers = (newServers: ServerMonitoring[]) => {
+    localStorage.setItem(MONITORING_SERVERS_KEY, JSON.stringify(newServers));
+    setServers(newServers);
+  };
+
+  const saveServerStats = (newStats: Record<string, ServerStats>) => {
+    localStorage.setItem(SERVER_STATS_KEY, JSON.stringify(newStats));
+    setServerStats(newStats);
+  };
+
+  // Имитация получения статистики сервера
+  const generateMockStats = (server: ServerMonitoring): ServerStats => {
+    const isOnline = Math.random() > 0.1; // 90% шанс что сервер онлайн
+    const onlinePlayers = isOnline ? Math.floor(Math.random() * server.maxPlayers) : 0;
+    
+    return {
+      id: `stats_${server.id}`,
+      serverId: server.id,
+      onlinePlayers,
+      maxPlayers: server.maxPlayers,
+      ping: isOnline ? Math.floor(Math.random() * 100) + 20 : 0,
+      isOnline,
+      version: server.version,
+      motd: isOnline ? `${server.name} - Добро пожаловать!` : "Сервер недоступен",
+      playerList: isOnline ? Array.from({ length: onlinePlayers }, (_, i) => `Player${i + 1}`) : [],
+      lastUpdate: new Date().toISOString(),
+    };
+  };
+
+  const updateServerStats = () => {
+    const newStats: Record<string, ServerStats> = {};
+    servers.forEach(server => {
+      if (server.isActive) {
+        newStats[server.id] = generateMockStats(server);
+      }
+    });
+    saveServerStats(newStats);
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    const serverData: Omit<ServerMonitoring, "id" | "createdAt" | "updatedAt"> = {
+      name: formData.get("name") as string,
+      address: formData.get("address") as string,
+      port: parseInt(formData.get("port") as string) || 25565,
+      version: formData.get("version") as string,
+      maxPlayers: parseInt(formData.get("maxPlayers") as string) || 100,
+      description: formData.get("description") as string || undefined,
+      isActive: formData.get("isActive") === "on",
+    };
+
+    if (currentServer) {
+      const updatedServers = servers.map(server =>
+        server.id === currentServer.id
+          ? {
+              ...serverData,
+              id: currentServer.id,
+              createdAt: currentServer.createdAt,
+              updatedAt: new Date().toISOString(),
+            }
+          : server
+      );
+      saveServers(updatedServers);
+      toast({
+        title: "Сервер обновлен",
+        description: `Сервер "${serverData.name}" успешно обновлен в мониторинге.`,
+      });
+    } else {
+      const newServer: ServerMonitoring = {
+        ...serverData,
+        id: Date.now().toString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      saveServers([...servers, newServer]);
+      toast({
+        title: "Сервер добавлен",
+        description: `Сервер "${serverData.name}" успешно добавлен в мониторинг.`,
+      });
+    }
+
+    setIsFormOpen(false);
+    setCurrentServer(null);
+  };
+
+  const handleEdit = (server: ServerMonitoring) => {
     setCurrentServer(server);
     setIsFormOpen(true);
   };
 
-  const handleDelete = (server: Server) => {
+  const handleDelete = (server: ServerMonitoring) => {
     setServerToDelete(server);
     setDeleteDialogOpen(true);
   };
@@ -82,62 +185,28 @@ const ServerMonitoring = () => {
   const confirmDelete = () => {
     if (serverToDelete) {
       const updatedServers = servers.filter(s => s.id !== serverToDelete.id);
-      saveServersToStorage(updatedServers);
+      saveServers(updatedServers);
+      
+      // Удаляем статистику сервера
+      const newStats = { ...serverStats };
+      delete newStats[serverToDelete.id];
+      saveServerStats(newStats);
       
       toast({
         title: "Сервер удален",
-        description: `${serverToDelete.name} был удален из мониторинга.`,
+        description: `Сервер "${serverToDelete.name}" удален из мониторинга.`,
       });
-      
-      setDeleteDialogOpen(false);
-      setServerToDelete(null);
     }
+    setDeleteDialogOpen(false);
+    setServerToDelete(null);
   };
 
-  const saveServer = (server: Server) => {
-    let updatedServers: Server[];
-    
-    if (servers.some(s => s.id === server.id)) {
-      // Обновляем существующий сервер
-      updatedServers = servers.map(s => 
-        s.id === server.id ? { ...server, status: s.status, players: s.players } : s
-      );
-    } else {
-      // Добавляем новый сервер
-      const newServer = {
-        ...server,
-        status: "offline" as const,
-        players: { online: 0, max: server.players.max }
-      };
-      updatedServers = [...servers, newServer];
-    }
-    
-    saveServersToStorage(updatedServers);
-    setIsFormOpen(false);
-    setCurrentServer(null);
-    
+  const handleRefreshStats = () => {
+    updateServerStats();
     toast({
-      title: currentServer ? "Сервер обновлен" : "Сервер добавлен",
-      description: `${server.name} был успешно ${currentServer ? "обновлен" : "добавлен"} в мониторинг.`,
+      title: "Статистика обновлена",
+      description: "Статистика всех серверов обновлена.",
     });
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "online": return "bg-green-500";
-      case "offline": return "bg-red-500";
-      case "maintenance": return "bg-yellow-500";
-      default: return "bg-gray-500";
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "online": return "Онлайн";
-      case "offline": return "Оффлайн";
-      case "maintenance": return "Техработы";
-      default: return "Неизвестно";
-    }
   };
 
   const handleLogout = () => {
@@ -149,6 +218,9 @@ const ServerMonitoring = () => {
     return null;
   }
 
+  const selectedServer = servers.find(s => s.id === selectedServerId);
+  const selectedStats = selectedServerId ? serverStats[selectedServerId] : null;
+
   return (
     <div className="flex h-screen bg-background">
       <AdminSidebar />
@@ -159,149 +231,313 @@ const ServerMonitoring = () => {
             <div>
               <h1 className="text-3xl font-bold">Мониторинг серверов</h1>
               <p className="text-muted-foreground">
-                Управление серверами для мониторинга
+                Управление серверами для отображения статистики игрокам
               </p>
             </div>
-        <Button 
-          onClick={() => {
-            setCurrentServer(null);
-            setIsFormOpen(true);
-          }}
-        >
-          <Icon name="Plus" className="mr-2 h-4 w-4" />
-          Добавить сервер
-        </Button>
-      </div>
+            <div className="flex gap-2">
+              <Button onClick={handleRefreshStats} variant="outline">
+                <Icon name="RefreshCw" className="w-4 h-4 mr-2" />
+                Обновить
+              </Button>
+              <Button onClick={() => setIsFormOpen(true)}>
+                <Icon name="Plus" className="w-4 h-4 mr-2" />
+                Добавить сервер
+              </Button>
+            </div>
+          </div>
 
-      {servers.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Icon name="Server" className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium text-muted-foreground mb-2">
-              Нет серверов
-            </h3>
-            <p className="text-sm text-muted-foreground text-center mb-4">
-              Добавьте первый сервер для начала мониторинга
-            </p>
-            <Button 
-              onClick={() => {
-                setCurrentServer(null);
-                setIsFormOpen(true);
-              }}
-            >
-              <Icon name="Plus" className="mr-2 h-4 w-4" />
-              Добавить сервер
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {servers.map((server) => (
-            <Card key={server.id}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{server.name}</CardTitle>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <Icon name="MoreHorizontal" className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleEdit(server)}>
-                        <Icon name="Edit" className="mr-2 h-4 w-4" />
-                        Редактировать
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => handleDelete(server)}
-                        className="text-red-600"
-                      >
-                        <Icon name="Trash2" className="mr-2 h-4 w-4" />
-                        Удалить
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Список серверов */}
+            <div className="lg:col-span-1">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Серверы ({servers.length})</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {servers.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-8">
+                      Нет серверов для мониторинга
+                    </p>
+                  ) : (
+                    servers.map((server) => {
+                      const stats = serverStats[server.id];
+                      const isSelected = selectedServerId === server.id;
+                      
+                      return (
+                        <div
+                          key={server.id}
+                          className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                            isSelected ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
+                          }`}
+                          onClick={() => setSelectedServerId(server.id)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium truncate">{server.name}</h3>
+                              <p className="text-sm text-muted-foreground truncate">
+                                {server.address}:{server.port}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2 ml-2">
+                              <Badge variant={stats?.isOnline ? "success" : "destructive"}>
+                                {stats?.isOnline ? "Онлайн" : "Оффлайн"}
+                              </Badge>
+                              {stats && (
+                                <span className="text-sm text-muted-foreground">
+                                  {stats.onlinePlayers}/{stats.maxPlayers}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEdit(server);
+                                }}
+                              >
+                                <Icon name="Edit" className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(server);
+                                }}
+                              >
+                                <Icon name="Trash2" className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            <Badge variant={server.isActive ? "default" : "secondary"}>
+                              {server.isActive ? "Активен" : "Неактивен"}
+                            </Badge>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Статистика выбранного сервера */}
+            <div className="lg:col-span-2">
+              {selectedServer && selectedStats ? (
+                <div className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle>{selectedServer.name}</CardTitle>
+                          <p className="text-muted-foreground">
+                            {selectedServer.address}:{selectedServer.port}
+                          </p>
+                        </div>
+                        <Badge variant={selectedStats.isOnline ? "success" : "destructive"} className="text-sm">
+                          {selectedStats.isOnline ? "Сервер онлайн" : "Сервер оффлайн"}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-primary">
+                            {selectedStats.onlinePlayers}
+                          </div>
+                          <div className="text-sm text-muted-foreground">Игроков онлайн</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold">
+                            {selectedStats.maxPlayers}
+                          </div>
+                          <div className="text-sm text-muted-foreground">Максимум слотов</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold">
+                            {selectedStats.ping}ms
+                          </div>
+                          <div className="text-sm text-muted-foreground">Пинг</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold">
+                            {selectedStats.version}
+                          </div>
+                          <div className="text-sm text-muted-foreground">Версия</div>
+                        </div>
+                      </div>
+                      
+                      {selectedStats.motd && (
+                        <div className="mt-4 p-3 bg-muted rounded-lg">
+                          <div className="text-sm text-muted-foreground mb-1">MOTD:</div>
+                          <div className="font-medium">{selectedStats.motd}</div>
+                        </div>
+                      )}
+                      
+                      <div className="text-xs text-muted-foreground mt-4">
+                        Последнее обновление: {new Date(selectedStats.lastUpdate).toLocaleString('ru-RU')}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {selectedStats.isOnline && selectedStats.playerList.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Игроки онлайн ({selectedStats.playerList.length})</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {selectedStats.playerList.slice(0, 12).map((player, index) => (
+                            <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded">
+                              <div className="w-6 h-6 bg-primary rounded-sm flex items-center justify-center text-xs text-white">
+                                {player.charAt(0)}
+                              </div>
+                              <span className="text-sm truncate">{player}</span>
+                            </div>
+                          ))}
+                          {selectedStats.playerList.length > 12 && (
+                            <div className="text-sm text-muted-foreground p-2">
+                              и еще {selectedStats.playerList.length - 12} игроков...
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              ) : (
+                <Card className="h-full">
+                  <CardContent className="flex items-center justify-center h-full">
+                    <div className="text-center text-muted-foreground">
+                      <Icon name="Server" className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>Выберите сервер для просмотра статистики</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+
+          {/* Форма добавления/редактирования сервера */}
+          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>
+                  {currentServer ? "Редактировать сервер" : "Добавить сервер"}
+                </DialogTitle>
+                <DialogDescription>
+                  {currentServer 
+                    ? "Измените параметры сервера для мониторинга"
+                    : "Добавьте новый сервер для мониторинга статистики"
+                  }
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Название *</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      defaultValue={currentServer?.name}
+                      placeholder="Основной сервер"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="version">Версия</Label>
+                    <Input
+                      id="version"
+                      name="version"
+                      defaultValue={currentServer?.version}
+                      placeholder="1.20.1"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Адрес *</Label>
+                    <Input
+                      id="address"
+                      name="address"
+                      defaultValue={currentServer?.address}
+                      placeholder="play.example.com"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="port">Порт</Label>
+                    <Input
+                      id="port"
+                      name="port"
+                      type="number"
+                      defaultValue={currentServer?.port || 25565}
+                      placeholder="25565"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="maxPlayers">Максимум игроков</Label>
+                  <Input
+                    id="maxPlayers"
+                    name="maxPlayers"
+                    type="number"
+                    defaultValue={currentServer?.maxPlayers || 100}
+                    placeholder="100"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Описание</Label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    defaultValue={currentServer?.description}
+                    placeholder="Дополнительное описание сервера"
+                    rows={3}
+                  />
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Badge 
-                    variant="secondary" 
-                    className={`${getStatusColor(server.status)} text-white`}
-                  >
-                    {getStatusText(server.status)}
-                  </Badge>
-                  <span className="text-sm text-muted-foreground">
-                    {server.address}:{server.port}
-                  </span>
+                  <Switch
+                    id="isActive"
+                    name="isActive"
+                    defaultChecked={currentServer?.isActive ?? true}
+                  />
+                  <Label htmlFor="isActive">Активен</Label>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Игроки:</span>
-                  <span className="text-sm font-medium">
-                    {server.players.online}/{server.players.max}
-                  </span>
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
+                    Отмена
+                  </Button>
+                  <Button type="submit">
+                    {currentServer ? "Сохранить" : "Добавить"}
+                  </Button>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Версия:</span>
-                  <span className="text-sm">{server.version}</span>
-                </div>
-                {server.description && (
-                  <p className="text-sm text-muted-foreground">
-                    {server.description}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+              </form>
+            </DialogContent>
+          </Dialog>
 
-      {/* Форма добавления/редактирования сервера */}
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {currentServer ? "Редактировать сервер" : "Добавить сервер"}
-            </DialogTitle>
-            <DialogDescription>
-              {currentServer 
-                ? "Внесите изменения в настройки сервера"
-                : "Заполните информацию о новом сервере"
-              }
-            </DialogDescription>
-          </DialogHeader>
-          <ServerForm
-            server={currentServer}
-            onSave={saveServer}
-            onCancel={() => {
-              setIsFormOpen(false);
-              setCurrentServer(null);
-            }}
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* Диалог подтверждения удаления */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Удалить сервер?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Вы уверены, что хотите удалить сервер "{serverToDelete?.name}"? 
-              Это действие нельзя отменить.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Отмена</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Удалить
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          {/* Диалог подтверждения удаления */}
+          <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Удалить сервер</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Вы уверены, что хотите удалить сервер "{serverToDelete?.name}" из мониторинга?
+                  Это действие нельзя отменить, и сервер перестанет отображаться для игроков.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Отмена</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Удалить
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div>
