@@ -1,0 +1,26 @@
+{
+  "tests": [
+    {
+      "name": "Process donation with valid data",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "itemId": "vip_gold",
+        "serverId": "test_server",
+        "username": "TestPlayer"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "donationId": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Handle OPTIONS for CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    }
+  ]
+}

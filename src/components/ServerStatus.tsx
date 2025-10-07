@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import Icon from "@/components/ui/icon";
 import { ServerMonitoring, ServerStats } from "@/types/admin";
 
-const MONITORING_SERVERS_KEY = "monitoring_servers";
-const SERVER_STATS_KEY = "server_stats";
+const MONITORING_API_URL = "https://functions.poehali.dev/62a45015-2204-45c2-917c-d3a14f10d6b5";
 const MONITOR_FUNCTION_URL = "https://functions.poehali.dev/308e25d3-9e55-4704-ae69-10e1639f8a58";
 
 const ServerStatus = () => {
@@ -16,7 +15,7 @@ const ServerStatus = () => {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   useEffect(() => {
-    loadData();
+    loadServers();
     const interval = setInterval(() => {
       fetchServerStats();
     }, 30000);
@@ -24,26 +23,54 @@ const ServerStatus = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const loadData = () => {
+  const loadServers = async () => {
     try {
-      const savedServers = localStorage.getItem(MONITORING_SERVERS_KEY);
-      const savedStats = localStorage.getItem(SERVER_STATS_KEY);
+      const response = await fetch(MONITORING_API_URL);
+      const data = await response.json();
       
-      if (savedServers) {
-        const serversData = JSON.parse(savedServers);
-        const activeServers = serversData.filter((server: ServerMonitoring) => server.isActive);
-        setServers(activeServers);
+      if (data.success && data.servers) {
+        const activeServers = data.servers.filter((s: any) => s.isActive);
+        const formattedServers = activeServers.map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          address: s.address,
+          port: s.port,
+          version: s.version,
+          description: s.description,
+          maxPlayers: s.maxPlayers,
+          isActive: s.isActive
+        }));
         
-        if (activeServers.length > 0) {
-          fetchServerStats(activeServers);
+        setServers(formattedServers);
+        
+        if (formattedServers.length > 0) {
+          fetchServerStats(formattedServers);
+        }
+        
+        const statsMap: Record<string, ServerStats> = {};
+        activeServers.forEach((s: any) => {
+          if (s.stats) {
+            statsMap[s.id] = {
+              id: `stats_${s.id}`,
+              serverId: s.id,
+              onlinePlayers: s.stats.onlinePlayers,
+              maxPlayers: s.stats.maxPlayers,
+              ping: s.stats.ping,
+              isOnline: s.stats.isOnline,
+              version: s.stats.version,
+              motd: s.stats.motd,
+              playerList: [],
+              lastUpdate: s.stats.lastUpdate
+            };
+          }
+        });
+        
+        if (Object.keys(statsMap).length > 0) {
+          setServerStats(statsMap);
         }
       }
-      
-      if (savedStats) {
-        setServerStats(JSON.parse(savedStats));
-      }
     } catch (error) {
-      console.error("Ошибка загрузки данных серверов:", error);
+      console.error("Ошибка загрузки серверов:", error);
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +98,6 @@ const ServerStatus = () => {
         const data = await response.json();
         if (data.success && data.stats) {
           setServerStats(data.stats);
-          localStorage.setItem(SERVER_STATS_KEY, JSON.stringify(data.stats));
           setLastUpdate(new Date());
         }
       }

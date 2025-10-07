@@ -28,8 +28,13 @@ const navItems: NavItem[] = [
     icon: "Gift",
   },
   {
-    title: "Серверы",
-    href: "/admin/servers",
+    title: "Мониторинг серверов",
+    href: "/admin/monitoring-servers",
+    icon: "Activity",
+  },
+  {
+    title: "RCON серверы",
+    href: "/admin/rcon-servers",
     icon: "Server",
   },
   {

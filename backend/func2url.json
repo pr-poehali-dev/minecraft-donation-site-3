@@ -1,3 +1,6 @@
 {
+  "process-donation": "https://functions.poehali.dev/66b7439a-3ec6-43c6-b435-b25b1bc57431",
+  "rcon-api": "https://functions.poehali.dev/a70e9bce-a39c-4c5f-b6cf-9012154678f1",
+  "monitoring-api": "https://functions.poehali.dev/62a45015-2204-45c2-917c-d3a14f10d6b5",
   "server-monitor": "https://functions.poehali.dev/308e25d3-9e55-4704-ae69-10e1639f8a58"
 }

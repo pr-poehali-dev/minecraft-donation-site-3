@@ -14,6 +14,8 @@ import AdminDonations from "./pages/admin/Donations";
 import AdminServers from "./pages/admin/Servers";
 import AdminProducts from "./pages/admin/Products";
 import AdminNews from "./pages/admin/News";
+import AdminMonitoringServers from "./pages/admin/MonitoringServers";
+import AdminRconServers from "./pages/admin/RconServers";
 import News from "./pages/News";
 import AuthGuard from "./components/admin/AuthGuard";
 
@@ -52,6 +54,22 @@ const App = () => (
             element={
               <AuthGuard>
                 <AdminServers />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/admin/monitoring-servers"
+            element={
+              <AuthGuard>
+                <AdminMonitoringServers />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/admin/rcon-servers"
+            element={
+              <AuthGuard>
+                <AdminRconServers />
               </AuthGuard>
             }
           />
