@@ -48,7 +48,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if server_id:
                 cur.execute(
                     "SELECT id, name, address, rcon_port, rcon_password, description, is_active, created_at, updated_at "
-                    "FROM rcon_servers WHERE id = %s",
+                    "FROM t_p79689265_minecraft_donation_s.rcon_servers WHERE id = %s",
                     (server_id,)
                 )
                 row = cur.fetchone()
@@ -80,8 +80,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             else:
                 cur.execute(
                     "SELECT id, name, address, rcon_port, description, is_active "
-                    "FROM rcon_servers "
-                    "WHERE is_active = true "
+                    "FROM t_p79689265_minecraft_donation_s.rcon_servers "
                     "ORDER BY created_at DESC"
                 )
                 rows = cur.fetchall()
@@ -116,7 +115,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     }
             
             cur.execute(
-                "INSERT INTO rcon_servers (id, name, address, rcon_port, rcon_password, description, is_active) "
+                "INSERT INTO t_p79689265_minecraft_donation_s.rcon_servers (id, name, address, rcon_port, rcon_password, description, is_active) "
                 "VALUES (%s, %s, %s, %s, %s, %s, %s) "
                 "RETURNING id",
                 (
@@ -151,7 +150,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 }
             
             cur.execute(
-                "UPDATE rcon_servers SET "
+                "UPDATE t_p79689265_minecraft_donation_s.rcon_servers SET "
                 "name = %s, address = %s, rcon_port = %s, rcon_password = %s, "
                 "description = %s, is_active = %s, updated_at = CURRENT_TIMESTAMP "
                 "WHERE id = %s",
@@ -185,7 +184,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'body': json.dumps({'error': 'ID сервера обязателен'})
                 }
             
-            cur.execute("UPDATE rcon_servers SET is_active = false WHERE id = %s", (server_id,))
+            cur.execute("UPDATE t_p79689265_minecraft_donation_s.rcon_servers SET is_active = false WHERE id = %s", (server_id,))
             conn.commit()
             
             return {

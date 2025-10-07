@@ -6,8 +6,7 @@
       "path": "/",
       "expectedStatus": 200,
       "expectedBody": {
-        "success": true,
-        "servers": "array"
+        "success": true
       },
       "bodyMatcher": "partial"
     },

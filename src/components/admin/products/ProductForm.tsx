@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -203,7 +204,14 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                         htmlFor={`server-${server.id}`}
                         className="flex-1 cursor-pointer"
                       >
-                        <div className="font-medium text-sm">{server.name}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">{server.name}</span>
+                          {!server.isActive && (
+                            <Badge variant="outline" className="text-xs text-muted-foreground">
+                              Неактивен
+                            </Badge>
+                          )}
+                        </div>
                         <div className="text-xs text-muted-foreground">{server.address || 'RCON сервер'}</div>
                       </label>
                       {selectedServers.includes(server.id) && (

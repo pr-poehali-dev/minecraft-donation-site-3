@@ -15,7 +15,7 @@ interface RconServer {
 const PRODUCTS_STORAGE_KEY = "craft_world_products";
 const SERVERS_STORAGE_KEY = "craft_world_servers";
 const CATEGORIES_STORAGE_KEY = "craft_world_categories";
-const RCON_API_URL = "https://functions.poehali.dev/dc854b6c-4dfa-483e-99d1-e59bb8c5c574";
+const RCON_API_URL = "https://functions.poehali.dev/a70e9bce-a39c-4c5f-b6cf-9012154678f1";
 
 // Демо данные для категорий
 const DEFAULT_CATEGORIES: DonationCategory[] = [
@@ -71,7 +71,6 @@ export const useProductForm = (
       
       if (data.success && data.servers) {
         const gameServers: GameServer[] = data.servers
-          .filter((s: RconServer) => s.is_active)
           .map((s: RconServer) => ({
             id: s.id,
             name: s.name,
