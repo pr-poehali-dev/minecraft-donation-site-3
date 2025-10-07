@@ -175,9 +175,25 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
               </FormField>
               
               <FormSection title="Доступно на серверах (RCON)">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+                <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
+                  <div className="flex gap-2">
+                    <Icon name="Info" className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                    <div className="text-xs text-blue-900 dark:text-blue-100">
+                      <p className="font-medium mb-1">Как работает доставка:</p>
+                      <p>Игрок выбирает сервер при покупке → Команда автоматически выполняется на выбранном RCON сервере → Товар моментально доставляется</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
                   {servers.map((server) => (
-                    <div key={server.id} className="flex items-center space-x-2">
+                    <div 
+                      key={server.id} 
+                      className={`flex items-center space-x-2 p-3 rounded-lg border transition-all ${
+                        selectedServers.includes(server.id) 
+                          ? 'bg-primary/5 border-primary' 
+                          : 'bg-muted/30 border-border hover:border-primary/50'
+                      }`}
+                    >
                       <Checkbox
                         id={`server-${server.id}`}
                         checked={selectedServers.includes(server.id)}
@@ -185,17 +201,37 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                       />
                       <label
                         htmlFor={`server-${server.id}`}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        className="flex-1 cursor-pointer"
                       >
-                        {server.name} {server.address && `(${server.address})`}
+                        <div className="font-medium text-sm">{server.name}</div>
+                        <div className="text-xs text-muted-foreground">{server.address || 'RCON сервер'}</div>
                       </label>
+                      {selectedServers.includes(server.id) && (
+                        <Icon name="CheckCircle2" className="w-4 h-4 text-primary" />
+                      )}
                     </div>
                   ))}
                 </div>
                 {servers.length === 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    Нет доступных RCON серверов. Добавьте их в разделе "RCON Серверы".
-                  </p>
+                  <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-center">
+                    <Icon name="AlertTriangle" className="w-8 h-8 mx-auto mb-2 text-yellow-600" />
+                    <p className="text-sm font-medium text-yellow-900 dark:text-yellow-100 mb-1">
+                      Нет активных RCON серверов
+                    </p>
+                    <p className="text-xs text-yellow-700 dark:text-yellow-300">
+                      Добавьте RCON серверы в разделе "RCON Серверы" для автоматической доставки товаров
+                    </p>
+                  </div>
+                )}
+                {servers.length > 0 && selectedServers.length === 0 && (
+                  <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mt-3">
+                    <div className="flex gap-2">
+                      <Icon name="AlertCircle" className="w-4 h-4 text-amber-600 mt-0.5" />
+                      <p className="text-xs text-amber-900 dark:text-amber-100">
+                        Выберите хотя бы один сервер, иначе игроки не смогут купить этот товар
+                      </p>
+                    </div>
+                  </div>
                 )}
               </FormSection>
             </CardContent>

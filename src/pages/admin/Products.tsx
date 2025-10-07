@@ -26,12 +26,20 @@ import Icon from "@/components/ui/icon";
 import { Badge } from "@/components/ui/badge";
 
 const PRODUCTS_API_URL = "https://functions.poehali.dev/6574f144-b26c-46e4-a4eb-76db7d5dca00";
+const RCON_API_URL = "https://functions.poehali.dev/dc854b6c-4dfa-483e-99d1-e59bb8c5c574";
+
+interface RconServer {
+  id: string;
+  name: string;
+  address: string;
+}
 
 const AdminProducts = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [user, setUser] = useState<AdminUser | null>(null);
   const [products, setProducts] = useState<DonateItem[]>([]);
+  const [rconServers, setRconServers] = useState<RconServer[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<DonateItem | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
@@ -43,7 +51,26 @@ const AdminProducts = () => {
     }
     
     loadProducts();
+    loadRconServers();
   }, []);
+
+  const loadRconServers = async () => {
+    try {
+      const response = await fetch(RCON_API_URL);
+      const data = await response.json();
+      
+      if (data.success && data.servers) {
+        setRconServers(data.servers);
+      }
+    } catch (error) {
+      console.error("Ошибка загрузки RCON серверов:", error);
+    }
+  };
+
+  const getServerName = (serverId: string): string => {
+    const server = rconServers.find(s => s.id === serverId);
+    return server ? server.name : serverId;
+  };
 
   const loadProducts = async () => {
     try {
@@ -211,15 +238,34 @@ const AdminProducts = () => {
                     </p>
                   </CardHeader>
                   <CardContent className="p-4 pt-0">
-                    <div className="flex flex-wrap gap-1 mb-2">
-                      {product.servers && product.servers.map((server: string) => (
-                        <Badge key={server} variant="secondary" className="text-xs">
-                          {server}
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="text-xs text-muted-foreground truncate">
-                      Команда: <code>{product.commandTemplate}</code>
+                    <div className="space-y-2">
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                          <Icon name="Server" className="w-3 h-3" />
+                          Доступен на серверах:
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {product.servers && product.servers.length > 0 ? (
+                            product.servers.map((server: string) => (
+                              <Badge key={server} variant="secondary" className="text-xs">
+                                {getServerName(server)}
+                              </Badge>
+                            ))
+                          ) : (
+                            <Badge variant="destructive" className="text-xs">
+                              <Icon name="AlertCircle" className="w-3 h-3 mr-1" />
+                              Не настроен
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1 mb-0.5">
+                          <Icon name="Terminal" className="w-3 h-3" />
+                          Команда:
+                        </div>
+                        <code className="bg-muted px-1.5 py-0.5 rounded text-xs">{product.commandTemplate || 'Не указана'}</code>
+                      </div>
                     </div>
                   </CardContent>
                   <CardFooter className="p-4 flex justify-between">
