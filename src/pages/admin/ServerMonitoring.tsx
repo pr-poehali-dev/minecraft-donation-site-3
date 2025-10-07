@@ -33,6 +33,7 @@ import Icon from "@/components/ui/icon";
 
 const MONITORING_SERVERS_KEY = "monitoring_servers";
 const SERVER_STATS_KEY = "server_stats";
+const MONITOR_FUNCTION_URL = "https://functions.poehali.dev/308e25d3-9e55-4704-ae69-10e1639f8a58";
 
 const ServerMonitoring = () => {
   const { toast } = useToast();
@@ -62,10 +63,16 @@ const ServerMonitoring = () => {
     loadServerStats();
   }, []);
 
-  // Имитация обновления статистики серверов каждые 30 секунд
+  // Обновление статистики серверов каждые 30 секунд
   useEffect(() => {
-    const interval = setInterval(() => {
+    if (servers.length > 0) {
       updateServerStats();
+    }
+    
+    const interval = setInterval(() => {
+      if (servers.length > 0) {
+        updateServerStats();
+      }
     }, 30000);
     
     return () => clearInterval(interval);
@@ -95,33 +102,35 @@ const ServerMonitoring = () => {
     setServerStats(newStats);
   };
 
-  // Имитация получения статистики сервера
-  const generateMockStats = (server: ServerMonitoring): ServerStats => {
-    const isOnline = Math.random() > 0.1; // 90% шанс что сервер онлайн
-    const onlinePlayers = isOnline ? Math.floor(Math.random() * server.maxPlayers) : 0;
+  const updateServerStats = async () => {
+    const activeServers = servers.filter(s => s.isActive);
     
-    return {
-      id: `stats_${server.id}`,
-      serverId: server.id,
-      onlinePlayers,
-      maxPlayers: server.maxPlayers,
-      ping: isOnline ? Math.floor(Math.random() * 100) + 20 : 0,
-      isOnline,
-      version: server.version,
-      motd: isOnline ? `${server.name} - Добро пожаловать!` : "Сервер недоступен",
-      playerList: isOnline ? Array.from({ length: onlinePlayers }, (_, i) => `Player${i + 1}`) : [],
-      lastUpdate: new Date().toISOString(),
-    };
-  };
+    if (activeServers.length === 0) {
+      return;
+    }
 
-  const updateServerStats = () => {
-    const newStats: Record<string, ServerStats> = {};
-    servers.forEach(server => {
-      if (server.isActive) {
-        newStats[server.id] = generateMockStats(server);
+    try {
+      const response = await fetch(MONITOR_FUNCTION_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          servers: activeServers
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.stats) {
+          saveServerStats(data.stats);
+        }
+      } else {
+        console.error('Ошибка при обновлении статистики серверов');
       }
-    });
-    saveServerStats(newStats);
+    } catch (error) {
+      console.error('Ошибка при запросе к серверу мониторинга:', error);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
