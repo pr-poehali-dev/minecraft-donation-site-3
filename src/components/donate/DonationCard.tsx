@@ -41,13 +41,21 @@ const DonationCard = ({ item }: DonationCardProps) => {
       const response = await fetch(RCON_API_URL);
       const data = await response.json();
       
+      console.log('RCON API Response:', data);
+      console.log('Товар servers:', item.servers);
+      
       if (data.success && data.servers) {
         const activeServers = data.servers.filter((s: RconServer) => s.is_active);
+        console.log('Активные серверы:', activeServers);
         setServers(activeServers);
         
-        const availableServers = activeServers.filter((s: RconServer) => 
-          item.servers && item.servers.includes(s.id)
-        );
+        const availableServers = activeServers.filter((s: RconServer) => {
+          const isAvailable = item.servers && item.servers.includes(s.id);
+          console.log(`Сервер ${s.id} доступен для товара:`, isAvailable);
+          return isAvailable;
+        });
+        
+        console.log('Доступные серверы для товара:', availableServers);
         
         if (availableServers.length > 0) {
           setSelectedServer(availableServers[0].id);
