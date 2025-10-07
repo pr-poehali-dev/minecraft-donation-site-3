@@ -1,100 +1,139 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Server, TimeRange } from "@/types/server";
-import ServerStatsGrid from "./ServerStatsGrid";
-import ServerChart from "./ServerChart";
+import { Badge } from "@/components/ui/badge";
+import Icon from "@/components/ui/icon";
 
-interface ServerDetailCardProps {
-  server: Server;
-  timeRange: TimeRange;
-  onTimeRangeChange: (range: TimeRange) => void;
+interface MonitoringServer {
+  id: string;
+  name: string;
+  address: string;
+  port: number;
+  version?: string;
+  description?: string;
+  maxPlayers: number;
+  stats?: {
+    onlinePlayers: number;
+    maxPlayers: number;
+    ping: number;
+    isOnline: boolean;
+    version?: string;
+    motd?: string;
+    lastUpdate?: string;
+  };
 }
 
-const ServerDetailCard = ({ 
-  server, 
-  timeRange, 
-  onTimeRangeChange 
-}: ServerDetailCardProps) => {
+interface ServerDetailCardProps {
+  server: MonitoringServer | undefined;
+}
+
+const ServerDetailCard = ({ server }: ServerDetailCardProps) => {
+  if (!server) {
+    return (
+      <Card className="h-full">
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="text-center text-muted-foreground">
+            <Icon name="Server" className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>Выберите сервер для просмотра детальной статистики</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const stats = server.stats;
+  const isOnline = stats?.isOnline || false;
+  const fullAddress = server.port === 25565 ? server.address : `${server.address}:${server.port}`;
+
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle>{server.name}</CardTitle>
-          <div className="flex items-center gap-2">
-            <div className={`h-3 w-3 rounded-full ${
-              server.status === 'online' 
-                ? 'bg-green-500' 
-                : server.status === 'offline' 
-                  ? 'bg-red-500' 
-                  : 'bg-yellow-500'
-            }`}></div>
-            <span className="text-sm font-medium">
-              {server.status === 'online' 
-                ? 'Онлайн' 
-                : server.status === 'offline' 
-                  ? 'Оффлайн' 
-                  : 'Загрузка...'}
-            </span>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-2xl">{server.name}</CardTitle>
+              <p className="text-muted-foreground font-mono mt-1">{fullAddress}</p>
+              {server.description && (
+                <p className="text-sm text-muted-foreground mt-2">{server.description}</p>
+              )}
+            </div>
+            <Badge variant={isOnline ? "success" : "destructive"} className="text-sm px-4 py-2">
+              {isOnline ? "Онлайн" : "Оффлайн"}
+            </Badge>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <ServerStatsGrid server={server} />
-        
-        <Tabs defaultValue="players" className="w-full">
-          <TabsList className="grid grid-cols-2 w-full max-w-xs mb-4">
-            <TabsTrigger value="players">Игроки</TabsTrigger>
-            <TabsTrigger value="performance">Производительность</TabsTrigger>
-          </TabsList>
-          
-          <div className="mb-4">
-            <TabsList className="inline-flex">
-              <TabsTrigger 
-                value="day" 
-                onClick={() => onTimeRangeChange('day')}
-                data-state={timeRange === 'day' ? 'active' : undefined}
-              >
-                24 часа
-              </TabsTrigger>
-              <TabsTrigger 
-                value="week" 
-                onClick={() => onTimeRangeChange('week')}
-                data-state={timeRange === 'week' ? 'active' : undefined}
-              >
-                Неделя
-              </TabsTrigger>
-              <TabsTrigger 
-                value="month" 
-                onClick={() => onTimeRangeChange('month')}
-                data-state={timeRange === 'month' ? 'active' : undefined}
-              >
-                Месяц
-              </TabsTrigger>
-            </TabsList>
-          </div>
-          
-          <TabsContent value="players" className="mt-0">
-            <ServerChart 
-              data={server.history || []} 
-              dataKey="players" 
-              name="Игроки"
-              stroke="#4ade80"
-            />
-          </TabsContent>
-          
-          <TabsContent value="performance" className="mt-0">
-            <ServerChart 
-              data={server.history || []} 
-              dataKey="tps" 
-              name="TPS"
-              stroke="#f59e0b"
-              domain={[0, 20]}
-            />
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent>
+          {stats ? (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="text-center p-4 bg-muted rounded-lg">
+                  <div className="text-3xl font-bold text-primary mb-1">
+                    {stats.onlinePlayers}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Игроков онлайн</div>
+                </div>
+                
+                <div className="text-center p-4 bg-muted rounded-lg">
+                  <div className="text-3xl font-bold mb-1">
+                    {stats.maxPlayers}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Максимум слотов</div>
+                </div>
+                
+                {isOnline && (
+                  <>
+                    <div className="text-center p-4 bg-muted rounded-lg">
+                      <div className="text-3xl font-bold mb-1">
+                        {stats.ping}ms
+                      </div>
+                      <div className="text-sm text-muted-foreground">Пинг</div>
+                    </div>
+                    
+                    <div className="text-center p-4 bg-muted rounded-lg">
+                      <div className="text-3xl font-bold mb-1">
+                        {stats.version || server.version || 'N/A'}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Версия</div>
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              {stats.motd && stats.motd !== server.name && (
+                <div className="p-4 bg-muted rounded-lg mb-4">
+                  <div className="flex items-start gap-3">
+                    <Icon name="MessageSquare" className="w-5 h-5 text-muted-foreground mt-0.5" />
+                    <div className="flex-1">
+                      <div className="text-sm text-muted-foreground mb-1">Message of the Day:</div>
+                      <div className="font-medium">{stats.motd}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex items-center justify-between pt-4 border-t">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Icon name="Clock" className="w-4 h-4" />
+                  <span>
+                    Последнее обновление: {stats.lastUpdate 
+                      ? new Date(stats.lastUpdate).toLocaleString('ru-RU')
+                      : 'Загрузка...'
+                    }
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Icon name="RefreshCw" className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Обновляется каждые 30 секунд</span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center justify-center py-8">
+              <Icon name="Loader2" className="w-8 h-8 animate-spin" />
+              <span className="ml-3 text-muted-foreground">Загрузка статистики сервера...</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
