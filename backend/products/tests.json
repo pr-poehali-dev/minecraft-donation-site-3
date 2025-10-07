@@ -1,0 +1,33 @@
+{
+  "tests": [
+    {
+      "name": "Get all products",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "products": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Create new product",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "id": "test_product_123",
+        "name": "Test VIP",
+        "price": 199,
+        "category": "vip",
+        "commandTemplate": "pex user {player} group set vip",
+        "servers": ["survival"]
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

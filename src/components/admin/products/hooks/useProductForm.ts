@@ -4,9 +4,18 @@ import { DonateItem, DonationCategory, GameServer } from "@/types/donation";
 import { useLocalStorage } from "./useLocalStorage";
 import { useToast } from "@/hooks/use-toast";
 
+interface RconServer {
+  id: string;
+  name: string;
+  address: string;
+  rcon_port: number;
+  is_active: boolean;
+}
+
 const PRODUCTS_STORAGE_KEY = "craft_world_products";
 const SERVERS_STORAGE_KEY = "craft_world_servers";
 const CATEGORIES_STORAGE_KEY = "craft_world_categories";
+const RCON_API_URL = "https://functions.poehali.dev/dc854b6c-4dfa-483e-99d1-e59bb8c5c574";
 
 // Демо данные для категорий
 const DEFAULT_CATEGORIES: DonationCategory[] = [
@@ -49,10 +58,34 @@ export const useProductForm = (
     DEFAULT_CATEGORIES
   );
   
-  const [servers, setServers] = useLocalStorage<GameServer[]>(
-    SERVERS_STORAGE_KEY,
-    DEFAULT_SERVERS
-  );
+  const [servers, setServers] = useState<GameServer[]>([]);
+  
+  useEffect(() => {
+    loadRconServers();
+  }, []);
+  
+  const loadRconServers = async () => {
+    try {
+      const response = await fetch(RCON_API_URL);
+      const data = await response.json();
+      
+      if (data.success && data.servers) {
+        const gameServers: GameServer[] = data.servers
+          .filter((s: RconServer) => s.is_active)
+          .map((s: RconServer) => ({
+            id: s.id,
+            name: s.name,
+            address: s.address,
+            version: "RCON",
+            isActive: s.is_active
+          }));
+        setServers(gameServers);
+      }
+    } catch (error) {
+      console.error("Ошибка загрузки RCON серверов:", error);
+      setServers(DEFAULT_SERVERS);
+    }
+  };
   
   const [formData, setFormData] = useState<DonateItem>({
     id: product?.id || Date.now(),
