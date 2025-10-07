@@ -83,7 +83,7 @@ export const useProductForm = (
       }
     } catch (error) {
       console.error("Ошибка загрузки RCON серверов:", error);
-      setServers(DEFAULT_SERVERS);
+      setServers([]);
     }
   };
   

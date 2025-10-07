@@ -13,6 +13,8 @@ import AdminLogin from "./pages/admin/Login";
 import AdminDonations from "./pages/admin/Donations";
 import AdminServers from "./pages/admin/Servers";
 import AdminProducts from "./pages/admin/Products";
+import AdminPurchases from "./pages/admin/Purchases";
+import AdminSettings from "./pages/admin/Settings";
 import AdminNews from "./pages/admin/News";
 import AdminMonitoringServers from "./pages/admin/MonitoringServers";
 import AdminRconServers from "./pages/admin/RconServers";
@@ -78,6 +80,22 @@ const App = () => (
             element={
               <AuthGuard>
                 <AdminProducts />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/admin/purchases"
+            element={
+              <AuthGuard>
+                <AdminPurchases />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/admin/settings"
+            element={
+              <AuthGuard>
+                <AdminSettings />
               </AuthGuard>
             }
           />

@@ -20,7 +20,12 @@ const navItems: NavItem[] = [
   {
     title: "Товары",
     href: "/admin/products",
-    icon: "ShoppingCart",
+    icon: "Package",
+  },
+  {
+    title: "История покупок",
+    href: "/admin/purchases",
+    icon: "ShoppingBag",
   },
   {
     title: "Пожертвования",
@@ -41,6 +46,11 @@ const navItems: NavItem[] = [
     title: "Новости",
     href: "/admin/news",
     icon: "Newspaper",
+  },
+  {
+    title: "Настройки",
+    href: "/admin/settings",
+    icon: "Settings",
   },
 ];
 

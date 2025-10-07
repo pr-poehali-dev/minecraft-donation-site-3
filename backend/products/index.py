@@ -10,6 +10,8 @@ import os
 import psycopg2
 import time
 from typing import Dict, Any
+import urllib.request
+import urllib.error
 
 try:
     from mcrcon import MCRcon
@@ -18,6 +20,41 @@ except ImportError:
     HAS_RCON = False
 
 DSN = os.environ.get('DATABASE_URL')
+
+def send_webhook_notification(purchase_data: Dict[str, Any]) -> None:
+    try:
+        conn = psycopg2.connect(DSN)
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT webhook_url, is_enabled 
+            FROM t_p79689265_minecraft_donation_s.webhook_settings 
+            WHERE id = 'default'
+        """)
+        
+        webhook_settings = cur.fetchone()
+        cur.close()
+        conn.close()
+        
+        if not webhook_settings or not webhook_settings[1]:
+            return
+        
+        webhook_url = webhook_settings[0]
+        if not webhook_url:
+            return
+        
+        data = json.dumps(purchase_data).encode('utf-8')
+        req = urllib.request.Request(
+            webhook_url,
+            data=data,
+            headers={'Content-Type': 'application/json'}
+        )
+        
+        with urllib.request.urlopen(req, timeout=5) as response:
+            response.read()
+            
+    except Exception as e:
+        print(f"Webhook notification error: {str(e)}")
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method: str = event.get('httpMethod', 'GET')
@@ -282,6 +319,16 @@ def handle_purchase(event: Dict[str, Any]) -> Dict[str, Any]:
                     WHERE id = %s
                 """, ('delivered', purchase_id))
                 conn.commit()
+                
+                send_webhook_notification({
+                    'event': 'purchase_delivered',
+                    'purchaseId': purchase_id,
+                    'productName': product_name,
+                    'playerNickname': player_nickname,
+                    'serverId': server_id,
+                    'pricePaid': float(final_price),
+                    'timestamp': time.time()
+                })
                 
                 cur.close()
                 conn.close()
