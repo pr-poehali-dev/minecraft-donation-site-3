@@ -1,40 +1,39 @@
-
-@import url('https://fonts.googleapis.com/css2?family=Minecraft&family=Poppins:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Minecraft&family=Poppins:wght@400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+
 @layer base {
   :root {
     --background: 200 14% 12%;
     --foreground: 200 10% 98%;
-    
+
     --card: 200 14% 16%;
     --card-foreground: 200 10% 98%;
-    
+
     --popover: 200 14% 10%;
     --popover-foreground: 200 10% 98%;
-    
+
     --primary: 122 65% 55%;
     --primary-foreground: 122 10% 10%;
-    
+
     --secondary: 200 20% 20%;
     --secondary-foreground: 200 10% 98%;
-    
+
     --muted: 200 10% 20%;
     --muted-foreground: 200 10% 60%;
-    
+
     --accent: 122 40% 30%;
     --accent-foreground: 122 10% 98%;
-    
+
     --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 98%;
-    
+
     --border: 200 18% 22%;
     --input: 200 18% 22%;
     --ring: 122 65% 40%;
-    
+
     --radius: 0.5rem;
 
     --sidebar-background: 200 14% 10%;
@@ -75,7 +74,7 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    
+
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -92,16 +91,16 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Poppins', sans-serif;
+    font-family: "Poppins", sans-serif;
   }
 
   .minecraft-font {
-    font-family: 'Minecraft', sans-serif;
+    font-family: "Minecraft", sans-serif;
   }
 }
 
 .hero-section {
-  background-image: url('https://images.unsplash.com/photo-1533058806395-926d0714e5fc?q=80&w=2574');
+  background-image: url("https://images.unsplash.com/photo-1533058806395-926d0714e5fc?q=80&w=2574");
   background-size: cover;
   background-position: center;
   position: relative;
@@ -109,7 +108,7 @@
 }
 
 .hero-section::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -120,7 +119,9 @@
 }
 
 .server-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .server-card:hover {
@@ -141,7 +142,52 @@
 }
 
 @keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-gradient {
+  background-size: 200% auto;
+  animation: gradient 3s linear infinite;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% center;
+  }
+  50% {
+    background-position: 100% center;
+  }
+  100% {
+    background-position: 0% center;
+  }
+}
+
+.bg-grid-white {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
 }

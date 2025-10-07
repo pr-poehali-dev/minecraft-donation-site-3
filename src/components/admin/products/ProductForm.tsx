@@ -174,7 +174,7 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                 />
               </FormField>
               
-              <FormSection title="Доступно на серверах">
+              <FormSection title="Доступно на серверах (RCON)">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
                   {servers.map((server) => (
                     <div key={server.id} className="flex items-center space-x-2">
@@ -187,13 +187,15 @@ const ProductForm = ({ product, onSave, onCancel }: ProductFormProps) => {
                         htmlFor={`server-${server.id}`}
                         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                       >
-                        {server.name} ({server.version})
+                        {server.name} {server.address && `(${server.address})`}
                       </label>
                     </div>
                   ))}
                 </div>
                 {servers.length === 0 && (
-                  <p className="text-xs text-muted-foreground">Нет доступных серверов</p>
+                  <p className="text-xs text-muted-foreground">
+                    Нет доступных RCON серверов. Добавьте их в разделе "RCON Серверы".
+                  </p>
                 )}
               </FormSection>
             </CardContent>
